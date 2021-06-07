@@ -1,3 +1,14 @@
+""" привет! у меня стандартная проблема - я не понимаю как должен работать
+ код и не могу думать на языке компьютера, не могу переводить
+ человеческий язык в комьютерную логику. всё тщетно, наверное кодинг
+ не моё.
+ Но всё таки попытался исправить всё. Но есть большая проблема -
+ мне не приходят уведомления в телеграм при ревью.
+ (а код пишем для этого (лол)). Почему? Подскажи пожалуйста
+ сам я не уверен в чат айди, это же айди моего никнейма в телеге?
+ если да то тогда не понимаю почему уведомлений нет"""
+
+
 import logging
 import os
 import time
@@ -22,12 +33,14 @@ bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
 
 def parse_homework_status(homework):
-    try:
-        homework_name = homework.get('homework_name')
-        homework_status = homework.get('status')
-    except KeyError as e:
-        raise Exception(
-            f'неправильное значение {e}')
+    homework_name = homework.get('homework_name')
+    if homework_name is None:
+        logging.error(f'Неожиданный ответ: {homework_name}')
+        return 'Сервер вернул неожиданный ответ'
+    homework_status = homework.get('status')
+    if homework_status is None:
+        logging.error(f'Неизвестный статус работы: {homework_status}')
+        return 'Сервер вернул неизвестный статус работы'
     homework_checked = f'У вас проверили работу "{homework_name}"!\n\n'
     status_answers = {
         'reviewing': f'Работа "{homework_name}" взята на ревью',
@@ -37,10 +50,8 @@ def parse_homework_status(homework):
                      'Ревьюеру всё понравилось, '
                      'можно приступать к следующему уроку.')
     }
-    try:
-        return status_answers[homework_status]
-    except KeyError as e:
-        raise Exception(f'неизвестный статус: {e}')
+    logging.info(homework)
+    return status_answers[homework_status]
 
 
 def get_homework_statuses(current_timestamp):
@@ -48,10 +59,14 @@ def get_homework_statuses(current_timestamp):
     params = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(
-            f'{API_URL}homework_statuses/',
+            API_URL,
             headers=headers, params=params)
-    except Exception as e:
-        raise Exception(f'Ошибка при обращении к API: {e}')
+    except requests.RequestException:
+        logging.error('Ошибка при обращении к API')
+        return {}
+    except ValueError:
+        logging.warning('Ошибка формата json')
+        return {}
     return homework_statuses.json()
 
 
@@ -86,7 +101,9 @@ def main():
             time.sleep(300)
 
         except Exception as e:
-            print(f'Бот столкнулся с ошибкой: {e}')
+            logging.critical('bot is down')
+            send_message(
+                f'Бот столкнулся с ошибкой: {e}', bot_client)
             time.sleep(5)
 
 
