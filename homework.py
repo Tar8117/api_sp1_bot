@@ -1,3 +1,11 @@
+"""  либо так вместо 54 строчки:
+     try:
+        verdict = homework_statuses[homework_status]
+    except KeyError:
+        logging.exception('Неизвестное значение статуса')
+    return (f'"{homework_checked}" {verdict}')
+"""
+
 import logging
 import os
 import time
@@ -44,15 +52,6 @@ def parse_homework_status(homework):
     logging.info(homework)
     # что если сделать вот так и ничего не обрабатывать?
     return status_answers.get(homework_status)
-
-
-"""  либо так:
-     try:
-        verdict = homework_statuses[homework_status]
-    except KeyError:
-        logging.exception('Неизвестное значение статуса')
-    return (f'"{homework_checked}" {verdict}') 
-    """
 
 
 def get_homework_statuses(current_timestamp):
