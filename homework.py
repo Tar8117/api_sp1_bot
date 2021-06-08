@@ -1,17 +1,8 @@
-""" привет! у меня стандартная проблема - я не понимаю как должен работать
- код и не могу думать на языке компьютера, не могу переводить
- человеческий язык в комьютерную логику. всё тщетно, наверное кодинг
- не моё.
- Но всё таки попытался исправить всё. Но есть большая проблема -
- мне не приходят уведомления в телеграм при ревью.
- (а код пишем для этого (лол)). Почему? Подскажи пожалуйста
- сам я не уверен в чат айди, это же айди моего никнейма в телеге?
- если да то тогда не понимаю почему уведомлений нет"""
-
-
 import logging
 import os
 import time
+from json import JSONDecodeError
+
 import requests
 
 import telegram
@@ -51,7 +42,17 @@ def parse_homework_status(homework):
                      'можно приступать к следующему уроку.')
     }
     logging.info(homework)
-    return status_answers[homework_status]
+    # что если сделать вот так и ничего не обрабатывать?
+    return status_answers.get(homework_status)
+
+
+"""  либо так:
+     try:
+        verdict = homework_statuses[homework_status]
+    except KeyError:
+        logging.exception('Неизвестное значение статуса')
+    return (f'"{homework_checked}" {verdict}') 
+    """
 
 
 def get_homework_statuses(current_timestamp):
@@ -62,10 +63,11 @@ def get_homework_statuses(current_timestamp):
             API_URL,
             headers=headers, params=params)
     except requests.RequestException:
-        logging.error('Ошибка при обращении к API')
+        logging.error('Ошибка при обращении к API', params=params,
+                      exc_info=True)
         return {}
-    except ValueError:
-        logging.warning('Ошибка формата json')
+    except JSONDecodeError:
+        logging.info('Ошибка конвертации в JSON')
         return {}
     return homework_statuses.json()
 
@@ -101,7 +103,7 @@ def main():
             time.sleep(300)
 
         except Exception as e:
-            logging.critical('bot is down')
+            logging.exception('bot is down')
             send_message(
                 f'Бот столкнулся с ошибкой: {e}', bot_client)
             time.sleep(5)
