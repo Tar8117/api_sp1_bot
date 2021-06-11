@@ -52,9 +52,10 @@ def parse_homework_status(homework):
     logging.info(homework)
     try:
         verdict = status_answers[homework_status]
-        return f'"{homework_checked}" {verdict}'
+        return f'{homework_checked} {verdict}'
     except KeyError:
         logging.exception('Неизвестное значение статуса')
+        raise
 
 
 def get_homework_statuses(current_timestamp):
