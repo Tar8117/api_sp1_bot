@@ -34,12 +34,12 @@ bot = telegram.Bot(token=TELEGRAM_TOKEN)
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     if homework_name is None:
-        logging.error(f'Неожиданный ответ: {homework_name}')
-        return 'Сервер вернул неожиданный ответ'
+        logging.error(f'В ответе сервера нет имени домашки: {homework_name}')
+        return 'В ответе сервера нет имени домашки'
     homework_status = homework.get('status')
     if homework_status is None:
-        logging.error(f'Неизвестный статус работы: {homework_status}')
-        return 'Сервер вернул неизвестный статус работы'
+        logging.error(f'Статуса нет в ответе сервера: {homework_status}')
+        return 'Статуса нет в ответе сервера'
     homework_checked = f'У вас проверили работу "{homework_name}"!\n\n'
     status_answers = {
         'reviewing': f'Работа "{homework_name}" взята на ревью',
@@ -50,8 +50,11 @@ def parse_homework_status(homework):
                      'можно приступать к следующему уроку.')
     }
     logging.info(homework)
-    # что если сделать вот так и ничего не обрабатывать?
-    return status_answers.get(homework_status)
+    try:
+        verdict = status_answers[homework_status]
+        return f'"{homework_checked}" {verdict}'
+    except KeyError:
+        logging.exception('Неизвестное значение статуса')
 
 
 def get_homework_statuses(current_timestamp):
@@ -61,14 +64,13 @@ def get_homework_statuses(current_timestamp):
         homework_statuses = requests.get(
             API_URL,
             headers=headers, params=params)
+        return homework_statuses.json()
     except requests.RequestException:
-        logging.error('Ошибка при обращении к API', params=params,
-                      exc_info=True)
+        logging.error(f'Ошибка при обращении к API, параметры: {params}')
         return {}
     except JSONDecodeError:
         logging.info('Ошибка конвертации в JSON')
         return {}
-    return homework_statuses.json()
 
 
 def send_message(message, bot_client):
