@@ -1,11 +1,3 @@
-"""  либо так вместо 54 строчки:
-     try:
-        verdict = homework_statuses[homework_status]
-    except KeyError:
-        logging.exception('Неизвестное значение статуса')
-    return (f'"{homework_checked}" {verdict}')
-"""
-
 import logging
 import os
 import time
